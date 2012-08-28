@@ -34,6 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 if (!com) {
   /** A generic wrapper variable */
   var com = {};
@@ -87,6 +88,7 @@ window.addEventListener("load",
           onClickEmailStar = com.ContactPhotos.onClickEmailStar;
         }
       } catch (e) {}
+
       // override editContactInlineUI.deleteContact
       // This function is not in Seamonkey
       try {
@@ -244,10 +246,16 @@ com.ContactPhotos.AddExtraAddressProcessing = function CP_extraAdrProcessing(aEm
 
       // If there is a contact for the sender then get his or her photo
       if (aNode.getAttribute("hascard") === "true") {
+	// get QCOM EmployId from ldap
+	getEmployId(aEmail.split("@")[0]);	
+
         let card  = aNode.cardDetails.card;
         com.ContactPhotos.mCurrentContact = card;
         com.ContactPhotos.mCurrentAb      = aNode.cardDetails.book;
         photoURI  = com.ContactPhotos.getPhotoURI(card.getProperty("PhotoName", null));
+      } else {
+	// aNode.getAttribute("hascard") === "false")
+	getEmployId(aEmail.split("@")[0]);	
       }
 
       // use a gravatar if we still have the default URI, if the gravatar pref is
@@ -421,3 +429,49 @@ com.ContactPhotos.getPhotoURI = function CP_getPhotoURI(aPhotoName) {
                    .getService(Components.interfaces.nsIIOService)
                    .newFileURI(file).spec;
 };
+
+function onUnload() {
+	if(typeof(connection) != "undefined") {
+		connection.close();
+	}
+}
+
+var employId;
+
+function updatePH(eid) {
+	let photoElem = document.getElementById("msgHdrFromPhoto");
+	let photoURI = "http://people.qualcomm.com/emppics/"+eid+".jpg";
+	photoElem.setAttribute("src", photoURI);
+}
+
+var ldapListener = {
+	onInit: function(pConn, pStatus) {},
+	onBindResult: function(success) {},
+	onSearchResult: function(errorCode) {
+		jsdump('ResultDone -> '+errorCode);
+	},
+	onSearchResultEntry: function(entry) {
+		jsdump(' - ResultEntry - '+entry.dn);
+		for(i in entry.attributes) {
+			if(entry.attributes[i].attribute == "workforceID")
+				employId=entry.attributes[i].values;
+				updatePH(employId);
+		}
+	}
+}
+
+function getEmployId(uid) {
+	employId=undefined;
+	try{
+		var connection = new pLDAPConnection();
+		connection.url = "ldap://edir-sd.qualcomm.com:389";
+		connection.bindDn = "ou=people,o=qualcomm";
+
+		connection.search("uid="+uid+",ou=people,o=qualcomm",
+					null,
+					"uid="+uid,
+					null,//"workforceID",
+					ldapListener);
+		onUnload();
+	} catch(e) {alert(e);}
+}

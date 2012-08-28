@@ -39,6 +39,9 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="Preferences.js"/>
   <script type="application/javascript" src="mainOverlay.js"/>
+  <script type="text/javascript" src="chrome://contactphotos/content/helpers/ldap-connection.js"/>
+  <script type="text/javascript" src="chrome://contactphotos/content/helpers/ldap-message-listener.js"/>
+  <script type="text/javascript" src="chrome://contactphotos/content/utils.js"/>
   <stringbundleset id="stringbundleset">
     <stringbundle id="ContactPhotosStringBundle"
                   src="chrome://contactphotos/locale/contactphotos.properties"/>
